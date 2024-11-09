@@ -4,28 +4,41 @@ let index = 0;
 
 // Fungsi untuk mengganti teks
 function changeText() {
-    textElement.innerText = texts[index];
-    index = (index + 1) % texts.length; // Ganti teks setiap kali
+    // Pastikan textElement sudah ada
+    if (textElement) {
+        textElement.innerText = texts[index];
+        index = (index + 1) % texts.length; // Ganti teks setiap kali
+    }
 }
 
-setInterval(changeText, 3000); // Ganti teks setiap 3 detik
+// Pastikan halaman sudah siap dan elemennya sudah dimuat sebelum setInterval
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(changeText, 3000); // Ganti teks setiap 3 detik
+});
 
 // Script untuk animasi heart
 window.requestAnimationFrame =
-    window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame || window.oRequestAnimationFrame ||
-    window.msRequestAnimationFrame ||
-    function (callback, element) {
-        var lastTime = element.__lastTime || 0;
-        var currTime = Date.now();
-        var timeToCall = Math.max(1, 33 - (currTime - lastTime));
-        window.setTimeout(callback, timeToCall);
-        element.__lastTime = currTime + timeToCall;
-    };
+    window.__requestAnimationFrame ||
+        window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        (function () {
+            return function (callback, element) {
+                var lastTime = element.__lastTime;
+                if (lastTime === undefined) {
+                    lastTime = 0;
+                }
+                var currTime = Date.now();
+                var timeToCall = Math.max(1, 33 - (currTime - lastTime));
+                window.setTimeout(callback, timeToCall);
+                element.__lastTime = currTime + timeToCall;
+            };
+        })();
 
-window.isDevice = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase()));
+window.isDevice = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(((navigator.userAgent || navigator.vendor || window.opera)).toLowerCase()));
 var loaded = false;
-
 var init = function () {
     if (loaded) return;
     loaded = true;
@@ -42,7 +55,6 @@ var init = function () {
     var heartPosition = function (rad) {
         return [Math.pow(Math.sin(rad), 3), -(15 * Math.cos(rad) - 5 * Math.cos(2 * rad) - 2 * Math.cos(3 * rad) - Math.cos(4 * rad))];
     };
-
     var scaleAndTranslate = function (pos, sx, sy, dx, dy) {
         return [dx + pos[0] * sx, dy + pos[1] * sy];
     };
@@ -56,15 +68,16 @@ var init = function () {
 
     var traceCount = mobile ? 20 : 50;
     var pointsOrigin = [];
+    var i;
     var dr = mobile ? 0.3 : 0.1;
-    for (var i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 210, 13, 0, 0));
-    for (var i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 150, 9, 0, 0));
-    for (var i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 90, 5, 0, 0));
+    for (i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 210, 13, 0, 0));
+    for (i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 150, 9, 0, 0));
+    for (i = 0; i < Math.PI * 2; i += dr) pointsOrigin.push(scaleAndTranslate(heartPosition(i), 90, 5, 0, 0));
     var heartPointsCount = pointsOrigin.length;
 
     var targetPoints = [];
     var pulse = function (kx, ky) {
-        for (var i = 0; i < pointsOrigin.length; i++) {
+        for (i = 0; i < pointsOrigin.length; i++) {
             targetPoints[i] = [];
             targetPoints[i][0] = kx * pointsOrigin[i][0] + width / 2;
             targetPoints[i][1] = ky * pointsOrigin[i][1] + height / 2;
@@ -72,7 +85,7 @@ var init = function () {
     };
 
     var e = [];
-    for (var i = 0; i < heartPointsCount; i++) {
+    for (i = 0; i < heartPointsCount; i++) {
         var x = rand() * width;
         var y = rand() * height;
         e[i] = {
@@ -101,7 +114,7 @@ var init = function () {
         time += ((Math.sin(time)) < 0 ? 9 : (n > 0.8) ? .2 : 1) * config.timeDelta;
         ctx.fillStyle = "rgba(0,0,0,.1)";
         ctx.fillRect(0, 0, width, height);
-        for (var i = e.length; i--;) {
+        for (i = e.length; i--;) {
             var u = e[i];
             var q = targetPoints[u.q];
             var dx = u.trace[0].x - q[0];
@@ -110,7 +123,8 @@ var init = function () {
             if (10 > length) {
                 if (0.95 < rand()) {
                     u.q = ~~(rand() * heartPointsCount);
-                } else {
+                }
+                else {
                     if (0.99 < rand()) {
                         u.D *= -1;
                     }
@@ -127,14 +141,14 @@ var init = function () {
             u.trace[0].y += u.vy;
             u.vx *= u.force;
             u.vy *= u.force;
-            for (var k = 0; k < u.trace.length - 1;) {
+            for (k = 0; k < u.trace.length - 1;) {
                 var T = u.trace[k];
                 var N = u.trace[++k];
                 N.x -= config.traceK * (N.x - T.x);
                 N.y -= config.traceK * (N.y - T.y);
             }
             ctx.fillStyle = u.f;
-            for (var k = 0; k < u.trace.length; k++) {
+            for (k = 0; k < u.trace.length; k++) {
                 ctx.fillRect(u.trace[k].x, u.trace[k].y, 1, 1);
             }
         }
