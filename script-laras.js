@@ -9,6 +9,19 @@ function changeText() {
 
 setInterval(changeText, 3000); // Ganti teks setiap 3 detik
 
+// Script untuk mengatur tombol Play/Pause Music
+document.getElementById("playButton").addEventListener("click", function() {
+    const music = document.getElementById("background-music");
+
+    if (music.paused) {
+        music.play();
+        this.textContent = "Pause Music"; // Ubah teks tombol menjadi "Pause Music"
+    } else {
+        music.pause();
+        this.textContent = "Play Music"; // Ubah kembali menjadi "Play Music" saat dijeda
+    }
+});
+
 // Script untuk animasi heart
 window.requestAnimationFrame =
     window.__requestAnimationFrame ||
@@ -104,7 +117,7 @@ var init = function () {
     var loop = function () {
         var n = -Math.cos(time);
         pulse((1 + n) * .5, (1 + n) * .5);
-        time += ((Math.sin(time)) < 0 ? 9 : (n > 0.8) ? .2 : 1) * config.timeDelta;
+        time += ((Math.sin(time)) < 0 ? 9 : (n > 0.8) ? 0.2 : 1) * config.timeDelta;
         ctx.fillStyle = "rgba(0,0,0,.1)";
         ctx.fillRect(0, 0, width, height);
         for (i = e.length; i--;) {
@@ -116,41 +129,34 @@ var init = function () {
             if (10 > length) {
                 if (0.95 < rand()) {
                     u.q = ~~(rand() * heartPointsCount);
-                }
-                else {
-                    if (0.99 < rand()) {
-                        u.D *= -1;
-                    }
+                } else {
+                    if (0.99 < rand()) u.D *= -1;
                     u.q += u.D;
                     u.q %= heartPointsCount;
-                    if (0 > u.q) {
-                        u.q += heartPointsCount;
-                    }
+                    if (0 > u.q) u.q += heartPointsCount;
                 }
             }
             u.vx += -dx / length * u.speed;
             u.vy += -dy / length * u.speed;
-            u.trace[0].x += u.vx;
-            u.trace[0].y += u.vy;
-            u.vx *= u.force;
-            u.vy *= u.force;
+            u.trace[0].x += u.vx *= u.force;
+            u.trace[0].y += u.vy *= u.force;
+            u.trace[0].x = (u.trace[0].x + width) % width;
+            u.trace[0].y = (u.trace[0].y + height) % height;
+            u.vx *= config.traceK;
+            u.vy *= config.traceK;
             for (k = 0; k < u.trace.length - 1;) {
                 var T = u.trace[k];
                 var N = u.trace[++k];
-                N.x -= config.traceK * (N.x - T.x);
-                N.y -= config.traceK * (N.y - T.y);
+                N.x -= 0.3 * (N.x - T.x);
+                N.y -= 0.3 * (N.y - T.y);
             }
             ctx.fillStyle = u.f;
             for (k = 0; k < u.trace.length; k++) {
-                ctx.fillRect(u.trace[k].x, u.trace[k].y, 1, 1);
+                ctx.fillRect(u.trace[k].x, u.trace[k].y, u.R, u.R);
             }
         }
-
         window.requestAnimationFrame(loop, canvas);
     };
     loop();
 };
-
-var s = document.readyState;
-if (s === 'complete' || s === 'loaded' || s === 'interactive') init();
-else document.addEventListener('DOMContentLoaded', init, false);
+document.addEventListener("DOMContentLoaded", init);
