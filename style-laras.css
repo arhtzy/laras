@@ -1,0 +1,36 @@
+/* Style untuk canvas */
+canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2); /* Latar belakang transparan */
+}
+
+/* Style untuk teks */
+#heart-text {
+  position: absolute;
+  bottom: 20px;  /* Menempatkan teks 20px dari bagian bawah layar */
+  right: 20px;   /* Menempatkan teks 20px dari sisi kanan layar */
+  font-family: 'Raleway', sans-serif; /* Font Raleway */
+  font-size: 2.5rem; /* Ukuran font */
+  color: #ff1493; /* Warna teks merah muda */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Bayangan teks */
+  z-index: 10; /* Agar teks berada di atas canvas */
+}
+
+
+
+/* Animasi teks menghilang dan muncul */
+@keyframes fadeOutIn {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
