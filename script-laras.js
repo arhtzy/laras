@@ -2,6 +2,7 @@ let texts = ["I ♥ YOU LARASANI JUNITA", "GILANG SAYANG LARASANI JUNITA", "HAII
 let textElement = document.getElementById("heart-text");
 let index = 0;
 
+// Fungsi untuk mengganti teks
 function changeText() {
     textElement.innerText = texts[index];
     index = (index + 1) % texts.length; // Ganti teks setiap kali
