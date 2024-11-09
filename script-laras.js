@@ -2,19 +2,12 @@ let texts = ["I ♥ YOU LARASANI JUNITA", "GILANG SAYANG LARASANI JUNITA", "HAII
 let textElement = document.getElementById("heart-text");
 let index = 0;
 
-// Fungsi untuk mengganti teks
 function changeText() {
-    // Pastikan textElement sudah ada
-    if (textElement) {
-        textElement.innerText = texts[index];
-        index = (index + 1) % texts.length; // Ganti teks setiap kali
-    }
+    textElement.innerText = texts[index];
+    index = (index + 1) % texts.length; // Ganti teks setiap kali
 }
 
-// Pastikan halaman sudah siap dan elemennya sudah dimuat sebelum setInterval
-document.addEventListener('DOMContentLoaded', function() {
-    setInterval(changeText, 3000); // Ganti teks setiap 3 detik
-});
+setInterval(changeText, 3000); // Ganti teks setiap 3 detik
 
 // Script untuk animasi heart
 window.requestAnimationFrame =
