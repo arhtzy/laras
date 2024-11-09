@@ -9,7 +9,7 @@
   font-family: 'Raleway', sans-serif;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 10;
-  animation: textAnimation 3s ease-in-out infinite, changeText 9s infinite;
+  animation: textAnimation 3s ease-in-out infinite;
 }
 
 @keyframes textAnimation {
