@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sebuah Pesan untukmu...</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Poppins:wght@300&display=swap');
+
+        :root {
+            --envelope-color: #f5eadd;
+            --flap-color: #e8dccc;
+            --card-color: #fffbf2;
+            --text-color: #4a3c31;
+            --heart-color: #e53935;
+            --bg-color: #000005;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Kanvas 3D, selalu aktif di belakang */
+        #galaxy-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 2s 1s ease-in-out;
+        }
+
+        /* Wrapper untuk semua elemen interaktif */
+        #main-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            perspective: 1000px;
+        }
+
+        /* Kontainer Amplop */
+        #envelope-container {
+            position: relative;
+            width: 300px;
+            height: 190px;
+            cursor: pointer;
+            transition: transform 1s ease-in-out, opacity 0.5s;
+        }
+
+        #envelope-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--envelope-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        #flap {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 95px;
+            background-color: var(--flap-color);
+            transform-origin: top;
+            transition: transform 0.7s ease-in-out;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            z-index: 12;
+        }
+        
+        /* [FIXED] Segel Hati yang sudah diperbaiki */
+        #heart-seal {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            top: 75px; /* Posisi disesuaikan */
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg); /* Memutar 'diamond' */
+            background-color: var(--heart-color);
+            z-index: 13;
+            transition: opacity 0.5s;
+        }
+        #heart-seal::before, #heart-seal::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%; /* Membuat bentuk lingkaran */
+            background-color: var(--heart-color);
+        }
+        #heart-seal::before {
+            top: -12.5px;
+            left: 0;
+        }
+        #heart-seal::after {
+            left: 12.5px;
+            top: 0;
+        }
+
+
+        /* --- Surat Satu Lembar --- */
+        #letter-paper {
+            position: absolute;
+            width: 90vw;
+            max-width: 800px;
+            height: 85vh;
+            max-height: 1200px;
+            background-color: var(--card-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transform: rotateX(-90deg) scale(0.8);
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out, visibility 0s 1s;
+        }
+        
+        #text-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: var(--text-color);
+            font-weight: 700;
+            margin: 0 0 20px 0;
+        }
+
+        p {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--text-color);
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        /* Tombol Tutup Surat */
+        #close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            z-index: 21;
+        }
+        #close-button::before, #close-button::after {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background-color: var(--text-color);
+        }
+        #close-button::before {
+            transform: rotate(45deg);
+        }
+        #close-button::after {
+            transform: rotate(-45deg);
+        }
+        
+        /* State saat amplop terbuka */
+        .open #flap {
+            transform: rotateX(180deg);
+        }
+        
+        .open #heart-seal {
+            opacity: 0;
+        }
+
+        /* State saat surat ditampilkan */
+        .show-letter #envelope-container {
+            opacity: 0;
+            transform: translateY(100px) scale(0.7);
+        }
+        .show-letter #letter-paper {
+            opacity: 1;
+            visibility: visible;
+            transform: rotateX(0deg) scale(1);
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out, visibility 0s 0s;
+        }
+        
+        .show-letter #galaxy-canvas {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="galaxy-canvas"></canvas>
+
+    <div id="main-wrapper">
+        <div id="envelope-container">
+            <div id="heart-seal"></div>
+            <div id="flap"></div>
+            <div id="envelope-body"></div>
+        </div>
+
+        <div id="letter-paper">
+            <div id="close-button"></div>
+            <!-- GANTI NAMA DAN PESAN DI SINI -->
+            <div id="text-content">
+                <h1>Selamat Ulang Tahun, Cahayaku!</h1>
+                <p>Untuk Larasani Junita,</p>
+                <p>Di hari yang tak terhingga istimewanya ini, aku berharap seluruh semesta berkonspirasi untuk membawakanmu kebahagiaan yang tak terbatas. Setiap bintang di galaksi ini seakan ikut merayakan kehadiranmu, sosok yang mampu menerangi duniaku hanya dengan sebuah senyuman.</p>
+                <p>Semoga di lembaran usiamu yang baru, setiap langkahmu dipenuhi keberanian, setiap mimpimu menemukan jalannya, dan setiap harimu diwarnai tawa. Terima kasih telah menjadi konstelasi terindah dalam hidupku.</p>
+                <p>Dengan segenap cinta,<br>Muhammad Gilang Wicaksana</p>
+            </div>
+        </div>
+    </div>
+    
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        let scene, camera, renderer, starfield;
+        let mouse = new THREE.Vector2();
+
+        function initGalaxy() {
+            const canvas = document.getElementById('galaxy-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 1;
+            
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // [IMPROVED] Skybox galaksi yang indah
+            const loader = new THREE.CubeTextureLoader();
+            const texture = loader.load([
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_px.jpg',
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_nx.jpg',
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_py.jpg',
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_ny.jpg',
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_pz.jpg',
+                'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/MilkyWay/dark-s_nz.jpg'
+            ]);
+            scene.background = texture;
+
+            createStarfield();
+            
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onMouseMove, false);
+            animate();
+        }
+
+        function createStarfield() {
+            const particlesGeometry = new THREE.BufferGeometry();
+            const count = 5000;
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < positions.length; i++) {
+                positions[i] = (Math.random() - 0.5) * 200;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                size: 0.1,
+                color: 0xffffff,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                opacity: 0.7
+            });
+            starfield = new THREE.Points(particlesGeometry, material);
+            scene.add(starfield);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            starfield.rotation.y += 0.0001;
+            camera.rotation.x += (mouse.y * 0.1 - camera.rotation.x) * 0.02;
+            camera.rotation.y += (-mouse.x * 0.1 - camera.rotation.y) * 0.02;
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+        
+        // --- Logika Interaksi ---
+        const envelope = document.getElementById('envelope-container');
+        const closeButton = document.getElementById('close-button');
+        const wrapper = document.getElementById('main-wrapper');
+        let isOpened = false;
+
+        envelope.addEventListener('click', () => {
+            if (isOpened) return;
+            isOpened = true;
+            
+            envelope.classList.add('open');
+            
+            setTimeout(() => {
+                wrapper.classList.add('show-letter');
+            }, 800); // Tunggu animasi amplop selesai sebelum menampilkan surat
+        });
+
+        closeButton.addEventListener('click', () => {
+            wrapper.classList.remove('show-letter');
+            
+            setTimeout(() => {
+                envelope.classList.remove('open');
+                isOpened = false;
+            }, 500); // Tunggu surat tertutup sebelum menampilkan amplop
+        });
+
+        // Inisialisasi galaksi saat halaman dimuat
+        initGalaxy();
+    </script>
+</body>
+</html>
